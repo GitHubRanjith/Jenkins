@@ -1,0 +1,18 @@
+ - name: Create Apps directory
+   file:
+    path: /apps/jenkins
+    state: directory
+    mode: 0777
+
+ - name: configure Systemd
+   template:
+    src: templates/jenkins-systemd.service.j2
+    dest: /etc/ststemd/system/jenkins.service
+   notify:
+      - restart jenkins
+
+ - name: enable systemd service
+   service:
+    name: jenkins
+    state: started
+    enabled: yes

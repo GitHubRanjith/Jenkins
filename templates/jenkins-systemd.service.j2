@@ -1,0 +1,36 @@
+[Unit]
+Description=Jenkins Master - Dockerized
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=root
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin
+ExecStartPre=-/usr/bin/docker kill {{ jenkins_container_name }}
+ExecStartPre=-/usr/bin/docker rm {{ jenkins_container_name }}
+ExecStartPre=/usr/bin/docker pull {{ jenkins_container_image }}
+ExecStart=/usr/bin/docker run \
+ --name {{ jenkins_container_name }} \
+ --restart={{ jenkins_container_restart_policy }} \
+ --net=host \
+ --memory={{ jenkins_container_memlimit }} \
+{% for ulimit in jenkins_container_ulimits %}
+ --ulimit {{ ulimit }} \
+{% endfor %}
+{% for env in jenkins_container_envvars %}
+ -e "{{ env }}" \
+{% endfor %}
+{% for volume in jenkins_container_volumes %}
+ -v {{ volume }} \
+{% endfor %}
+{% for port_map in jenkins_container_port_maps %}
+ -p {{ port_map }} \
+{% endfor %}
+ {{ jenkins_container_image }}
+ExecStop=/usr/bin/docker stop {{ jenkins_container_name }}
+TimeoutStartSec=15m
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
